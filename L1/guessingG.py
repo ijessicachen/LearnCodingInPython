@@ -1,13 +1,14 @@
 import random
 
-numAns = random.random(1, 10)
-numG = input("Enter a number from one to ten")
-while numG != numAns:
-  numG = input("Enter a number from one to ten")
-  if numG > numAns:
+numAns = random.randint(1, 10)
+while True:
+  numG = input("Enter a number from one to ten ")
+  if int(numG) > numAns:
     print("Too high!")
-  if numG < numAns:
+  if int(numG) < numAns:
     print("Too low!")
-print("You are correct! The number is" + numAns)
-
+  if int(numG) == numAns:
+    print("You are correct! The number is", numAns)
+    break
+input("Press enter/return to exit")
 

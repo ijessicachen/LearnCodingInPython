@@ -9,3 +9,4 @@ for t in range (0, 21):
   print(el3)
   print(el1)
   print(el2)
+#maybe change so it's only one number out every time the loop runs
