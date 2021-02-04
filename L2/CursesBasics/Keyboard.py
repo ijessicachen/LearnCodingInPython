@@ -11,7 +11,7 @@ def window(keyboard):
       keyboard.clear()
       keyboard.refresh()
     keyboard.addstr(sh-3, 0, str(sh))
-    keyboard.addstr(sh-3, sw-3, str(sw))
+    keyboard.addstr(0, sw-3, str(sw))
     userKey = keyboard.getch()
     #to make sure it is centred based on if the width is even or odd
     if sw%2 == 0:
