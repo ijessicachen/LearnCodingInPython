@@ -2,17 +2,23 @@
 import curses
 
 def window(keyboard):
+  sh, sw = 0, 0
   while True:
+    hh = sh
+    hw = sw
     sh, sw = keyboard.getmaxyx()
+    if hh != sh or hw != sw:
+      keyboard.clear()
+      keyboard.refresh()
     keyboard.addstr(sh-3, 0, str(sh))
     keyboard.addstr(sh-3, sw-3, str(sw))
     userKey = keyboard.getch()
-    #Get rid of the weird 5 that shows up for 2 digit codes.For this just add a space at taht spot before htis, you'll get it.
     #to make sure it is centred based on if the width is even or odd
     if sw%2 == 0:
-      s = 0.5
+      s = 1.5
     else:
       s = 1
+    #to cover the third digit since some are two digits so doing this will make sure it will actually be two digits 
     keyboard.addstr(sh//2, int((sw+1)//2+2+s), " ")
     #Printing the code and the chracter
     keyboard.addstr(sh//2, int((sw+1)//2+s), str(userKey))
