@@ -69,6 +69,8 @@ def board(snakeG):
     snakeG.addstr(snake[-1][0], snake[-1][1], " ")
     snake.pop()
 
+    #Randomly generate the fruit
+
     #check if the new snake with new head is touching the border
     if snake[0][0] == 0  or snake[0][0] == sh-3:
       break;
