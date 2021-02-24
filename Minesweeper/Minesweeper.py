@@ -1,3 +1,8 @@
+#Quick list-ish of what my character choices are:
+#ground: 9640
+#flag: 9873
+#bomb: 10040
+
 import curses
 import random
 import math
