@@ -1,27 +1,28 @@
 #Quick list-ish of what my character choices are:
-#ground: 9640
+#ground: 9640 OR 11034, try both
 #flag: 9873
 #bomb: 10040
 
 import curses
+from curses import textpad
 import random
 import math
 
 def initfield(center, size):
   
   board = []
-
   r, c = 0, 0
+
   #nested for loops below
   for y in range(center[0] - size[0]//2, center[0] + size[0]//2):
-    board.append([[0, 0]] * size[1])
+    board.append([[0, 0, 0]] * size[1])
     #last parameter changes the increment it's at, so it's two now, the default is one
     for x in range(center[1] - size[1], center[1] + size[1], 2):
       board[r][c] = [y, x, 0]
       #stdscr.addstr(y, x, chr(9608))
       c = c+1
     r = r+1
-  c= 0
+    c= 0
 
   #generate the bombs!
   i = 0 #track the bomb count
@@ -33,12 +34,13 @@ def initfield(center, size):
     if board[r][c][2] == -1:
       continue
     else:
-      field[r][c][2] = -1
+      board[r][c][2] = -1
       i = i+1
 
   #calculate the number of bombs
   for r in range(0, size[0]):
     for c in range(0, size[1]):
+      #CHECK THE BELOW
       if board[r][c][2] == -1:
         #this cell has a bomb
         continue
@@ -51,19 +53,22 @@ def initfield(center, size):
             continue
           else:
             if board[sr][sc][2] == -1:
-              board[r][c][2] = board[r][c] + 1
+              board[r][c][2] = board[r][c][2] + 1
 
 
   return board
 
-def paintfield(stdscr, field, size):
+def paintfield(stdscr, board, size):
   for r in range(0, size[0]):
     for c in range(0, size[1]):
       if board[r][c][2] == -1:
-        stdscr.addstr(field[r][c][0], field[r][c][1], chr(9600))
+        stdscr.addstr(board[r][c][0], board[r][c][1], chr(10040))
+      elif board[r][c][2] == 0:
+        stdscr.addstr(board[r][c][0], board[r][c][1], " ")
       else:
         #stdscr.addstr(field[r][c][0], field[r][c][1], chr(9608))
-        stdscr.addstr(field[r][c][0], field[r][c][1], chr(9608), str(board[r][c][2]))
+        stdscr.addstr(board[r][c][0], board[r][c][1], str(board[r][c][2]), board[r][c][2])
+      
         
 
 
@@ -73,13 +78,15 @@ def field(stdscr):
   #center variable
   center = [sh//2, sw//2]
   #set screen size variables
-  size = [sh//2, sw//4]
+  size = [30, 20]
 
   #call the field
   board = initfield(center, size)
 
-  paintfield(stdscr, field, size)
+  paintfield(stdscr, board, size)
+  textpad.rectangle(stdscr, center[0] - size[0]//2, center[1] - size[1]-2, center[0] + size[0]//2, center[1] + size[1]+1)
 
   stdscr.getch()
 
 curses.wrapper(field)
+#initfield([40, 50], [20, 20])
