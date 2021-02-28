@@ -58,11 +58,28 @@ def initfield(center, size):
 
   return board
 
-def paintfield(stdscr, board, size):
+
+def colours():
+  #curses setup for colours
+  curses.start_color()
+  curses.use_default_colors()
+
+  for i in range(0, curses.COLORS):
+    #initialize color pair
+    curses.init_pair(i + 1, i, -1)
+  #return colors in a dictionary type
+  return{
+    "cover": curses.color_pair(5),
+    "-1": curses.color_pair(8)
+  }
+
+
+def paintfield(stdscr, board, size, c):
+  #painting the board
   for r in range(0, size[0]):
     for c in range(0, size[1]):
       if board[r][c][2] == -1:
-        stdscr.addstr(board[r][c][0], board[r][c][1], chr(10040))
+        stdscr.addstr(board[r][c][0], board[r][c][1], chr(10040), c["-1"])
       elif board[r][c][2] == 0:
         stdscr.addstr(board[r][c][0], board[r][c][1], " ")
       else:
@@ -78,15 +95,15 @@ def field(stdscr):
   #center variable
   center = [sh//2, sw//2]
   #set screen size variables
-  size = [30, 20]
+  size = [20, 20]
 
   #call the field
   board = initfield(center, size)
 
-  paintfield(stdscr, board, size)
+  c = colours()
+  paintfield(stdscr, board, size, c)
   textpad.rectangle(stdscr, center[0] - size[0]//2, center[1] - size[1]-2, center[0] + size[0]//2, center[1] + size[1]+1)
 
   stdscr.getch()
 
 curses.wrapper(field)
-#initfield([40, 50], [20, 20])
