@@ -70,26 +70,55 @@ def colours():
   #return colors in a dictionary type
   return{
     "cover": curses.color_pair(5),
-    "-1": curses.color_pair(8)
+    "-1": curses.color_pair(150),
+    "1": curses.color_pair(70),
+    "2": curses.color_pair(80),
+    "3": curses.color_pair(85),
+    "4": curses.color_pair(119),
+    "5": curses.color_pair(87),
+    "6": curses.color_pair(90),
+    "7": curses.color_pair(100),
+    "8": curses.color_pair(70)
   }
 
 
-def paintfield(stdscr, board, size, c):
+def paintfield(stdscr, board, size, col):
   #painting the board
   for r in range(0, size[0]):
     for c in range(0, size[1]):
       if board[r][c][2] == -1:
-        stdscr.addstr(board[r][c][0], board[r][c][1], chr(10040), c["-1"])
+        stdscr.addstr(board[r][c][0], board[r][c][1], chr(10040), col["-1"])
       elif board[r][c][2] == 0:
         stdscr.addstr(board[r][c][0], board[r][c][1], " ")
       else:
         #stdscr.addstr(field[r][c][0], field[r][c][1], chr(9608))
-        stdscr.addstr(board[r][c][0], board[r][c][1], str(board[r][c][2]), board[r][c][2])
+        stdscr.addstr(board[r][c][0], board[r][c][1], str(board[r][c][2]), col[str(board[r][c][2])])
+
+
+
+def paintcell(stdscr, cell, col, reverse=False):
+  if cell[2] == -1:
+    cell_ch = chr(10040)
+    stdscr.addstr(cell[0], cell[1], chr(10040), col["-1"])
+  elif cell[2] == 0:
+    stdscr.addstr(cell[0], cell[1], " ")
+  else:
+    #stdscr.addstr(field[r][c][0], field[r][c][1], chr(9608))
+    stdscr.addstr(cell[0], cell[1], str(cell[2]), col[str(cell[2])])
+
+  if reverse:
+
+  
+  stdscr.addstr()
       
         
 
 
 def field(stdscr):
+  #turn off the curser
+  curses.curs_set(0)
+  r, c = 0, 0
+
   #get dimensions of the field
   sh, sw = stdscr.getmaxyx()
   #center variable
@@ -100,10 +129,13 @@ def field(stdscr):
   #call the field
   board = initfield(center, size)
 
-  c = colours()
-  paintfield(stdscr, board, size, c)
-  textpad.rectangle(stdscr, center[0] - size[0]//2, center[1] - size[1]-2, center[0] + size[0]//2, center[1] + size[1]+1)
+  col = colours()
+  paintfield(stdscr, board, size, col)
+  textpad.rectangle(stdscr, board[r][c][0] - 1, board[r][c][1] - 1, center[0] + size[0]//2, center[1] + size[1]+1)
 
+  #paint cell [r][c] reverse
+  stdscr.addstr(board[r][c][0], board[r][c][1], str(board[r][c][2]), curses.A_REVERSE)
+  
   stdscr.getch()
 
 curses.wrapper(field)
