@@ -69,16 +69,17 @@ def colours():
     curses.init_pair(i + 1, i, -1)
   #return colors in a dictionary type
   return{
-    "cover": curses.color_pair(5),
-    "-1": curses.color_pair(150),
-    "1": curses.color_pair(70),
-    "2": curses.color_pair(80),
-    "3": curses.color_pair(85),
-    "4": curses.color_pair(119),
-    "5": curses.color_pair(87),
-    "6": curses.color_pair(90),
-    "7": curses.color_pair(100),
-    "8": curses.color_pair(70)
+    "cover": curses.color_pair(16),
+    "-1": curses.color_pair(2),
+    "1": curses.color_pair(19),
+    "2": curses.color_pair(22),
+    "3": curses.color_pair(34),
+    "4": curses.color_pair(38),
+    "5": curses.color_pair(85),
+    "6": curses.color_pair(47),
+    "7": curses.color_pair(191),
+    "8": curses.color_pair(227),
+    "flag": curses.color_pair(1)
   }
 
 
@@ -90,20 +91,23 @@ def paintfield(stdscr, board, size, col):
 
 
 
-def paintcell(stdscr, cell, col, reverse=False):
-  if cell[2] == -1:
-    cell_ch = chr(10040)
-    cell_colour = col["-1"]
-  elif cell[2] == 0:
-    cell_ch = " "
-    cell_colour = col["-1"]
+def paintcell(stdscr, cell, col, reverse=False, show=False):
+  if show:
+    if cell[2] == -1:
+      cell_ch = chr(10040)
+      cell_colour = col["-1"]
+    elif cell[2] == 0:
+      cell_ch = " "
+      cell_colour = col["-1"]
+    else:
+      cell_ch = str(cell[2])
+      cell_colour = col[cell_ch]
   else:
-    cell_ch = str(cell[2])
-    cell_colour = col[cell_ch]
-
-  if reverse:
-    cell_colour = curses.A_REVERSE
+    cell_ch = chr(9640)
+    cell_colour = col["cover"]
   
+  if reverse:
+      cell_colour = curses.A_REVERSE
   stdscr.addstr(cell[0], cell[1], cell_ch, cell_colour)
       
         
@@ -125,7 +129,7 @@ def field(stdscr):
   board = initfield(center, size)
 
   col = colours()
-  textpad.rectangle(stdscr, board[r][c][0] - 1, board[r][c][1] - 1, center[0] + size[0]//2, center[1] + size[1]+1)
+  textpad.rectangle(stdscr, board[r][c][0] - 1, board[r][c][1] - 2, center[0] + size[0]//2, center[1] + size[1]+1)
   paintfield(stdscr, board, size, col)
 
   #paint cell [r][c] reverse
@@ -136,19 +140,21 @@ def field(stdscr):
   nr, nc = 0, 0
   while True:
     userKey = stdscr.getch()
-    if userKey in [27, 103]:
+    if userKey in [27, 113]:
       break
     elif userKey in [curses.KEY_RIGHT, 108]:
-        nc = c+1
-    elif userKey in [curses.KEY_LEFT]:
-        nc = c-1
-    elif userKey in [curses.KEY_UP]:
-        nr = r-1
-    elif userKey in [curses.KEY_DOWN]:
-        nr = r+1
+        if nc<size[1]-1:
+          nc = c+1
+    elif userKey in [curses.KEY_LEFT, 104]:
+        if nc>0:
+          nc = c-1
+    elif userKey in [curses.KEY_UP, 107]:
+        if nr>0:
+          nr = r-1
+    elif userKey in [curses.KEY_DOWN, 106]:
+        if nr<size[0]-1:
+          nr = r+1
 
-    if nr<0 or nr>=size[0] or nc<0 or nc>=size[1]:
-      continue
 
     paintcell(stdscr, board[r][c], col)
     paintcell(stdscr, board[nr][nc], col, True)
