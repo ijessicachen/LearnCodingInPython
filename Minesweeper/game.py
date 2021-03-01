@@ -125,12 +125,36 @@ def field(stdscr):
   board = initfield(center, size)
 
   col = colours()
-  paintfield(stdscr, board, size, col)
   textpad.rectangle(stdscr, board[r][c][0] - 1, board[r][c][1] - 1, center[0] + size[0]//2, center[1] + size[1]+1)
+  paintfield(stdscr, board, size, col)
 
   #paint cell [r][c] reverse
   paintcell(stdscr, board[r][c], col, True)
   
-  stdscr.getch()
+
+  #cell[r][c] but reverse
+  nr, nc = 0, 0
+  while True:
+    userKey = stdscr.getch()
+    if userKey in [27, 103]:
+      break
+    elif userKey in [curses.KEY_RIGHT, 108]:
+        nc = c+1
+    elif userKey in [curses.KEY_LEFT]:
+        nc = c-1
+    elif userKey in [curses.KEY_UP]:
+        nr = r-1
+    elif userKey in [curses.KEY_DOWN]:
+        nr = r+1
+
+    if nr<0 or nr>=size[0] or nc<0 or nc>=size[1]:
+      continue
+
+    paintcell(stdscr, board[r][c], col)
+    paintcell(stdscr, board[nr][nc], col, True)
+    r, c = nr, nc
+
+
+
 
 curses.wrapper(field)
