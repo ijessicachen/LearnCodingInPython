@@ -86,30 +86,25 @@ def paintfield(stdscr, board, size, col):
   #painting the board
   for r in range(0, size[0]):
     for c in range(0, size[1]):
-      if board[r][c][2] == -1:
-        stdscr.addstr(board[r][c][0], board[r][c][1], chr(10040), col["-1"])
-      elif board[r][c][2] == 0:
-        stdscr.addstr(board[r][c][0], board[r][c][1], " ")
-      else:
-        #stdscr.addstr(field[r][c][0], field[r][c][1], chr(9608))
-        stdscr.addstr(board[r][c][0], board[r][c][1], str(board[r][c][2]), col[str(board[r][c][2])])
+      paintcell(stdscr, board[r][c], col)
 
 
 
 def paintcell(stdscr, cell, col, reverse=False):
   if cell[2] == -1:
     cell_ch = chr(10040)
-    stdscr.addstr(cell[0], cell[1], chr(10040), col["-1"])
+    cell_colour = col["-1"]
   elif cell[2] == 0:
-    stdscr.addstr(cell[0], cell[1], " ")
+    cell_ch = " "
+    cell_colour = col["-1"]
   else:
-    #stdscr.addstr(field[r][c][0], field[r][c][1], chr(9608))
-    stdscr.addstr(cell[0], cell[1], str(cell[2]), col[str(cell[2])])
+    cell_ch = str(cell[2])
+    cell_colour = col[cell_ch]
 
   if reverse:
-
+    cell_colour = curses.A_REVERSE
   
-  stdscr.addstr()
+  stdscr.addstr(cell[0], cell[1], cell_ch, cell_colour)
       
         
 
@@ -134,7 +129,7 @@ def field(stdscr):
   textpad.rectangle(stdscr, board[r][c][0] - 1, board[r][c][1] - 1, center[0] + size[0]//2, center[1] + size[1]+1)
 
   #paint cell [r][c] reverse
-  stdscr.addstr(board[r][c][0], board[r][c][1], str(board[r][c][2]), curses.A_REVERSE)
+  paintcell(stdscr, board[r][c], col, True)
   
   stdscr.getch()
 
