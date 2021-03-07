@@ -15,10 +15,10 @@ def initfield(center, size):
 
   #nested for loops below
   for y in range(center[0] - size[0]//2, center[0] + size[0]//2):
-    board.append([[0, 0, 0]] * size[1])
+    board.append([])
     #last parameter changes the increment it's at, so it's two now, the default is one
     for x in range(center[1] - size[1], center[1] + size[1], 2):
-      board[r][c] = [y, x, 0]
+      board[r].append([y, x, 0, "covered"])
       #stdscr.addstr(y, x, chr(9608))
       c = c+1
     r = r+1
@@ -70,6 +70,7 @@ def colours():
   #return colors in a dictionary type
   return{
     "cover": curses.color_pair(16),
+    "0": curses.color_pair(1),
     "-1": curses.color_pair(2),
     "1": curses.color_pair(19),
     "2": curses.color_pair(22),
@@ -79,7 +80,7 @@ def colours():
     "6": curses.color_pair(47),
     "7": curses.color_pair(191),
     "8": curses.color_pair(227),
-    "flag": curses.color_pair(1)
+    "flag": curses.color_pair(197)
   }
 
 
@@ -92,6 +93,7 @@ def paintfield(stdscr, board, size, col):
 
 
 def paintcell(stdscr, cell, col, reverse=False, show=False):
+
   if show:
     if cell[2] == -1:
       cell_ch = chr(10040)
@@ -103,12 +105,44 @@ def paintcell(stdscr, cell, col, reverse=False, show=False):
       cell_ch = str(cell[2])
       cell_colour = col[cell_ch]
   else:
-    cell_ch = chr(9640)
-    cell_colour = col["cover"]
+    if cell[3] == "covered":
+      cell_ch = chr(9640)
+      cell_colour = col["cover"]
+    elif cell[3] == "flag":
+      cell_ch = chr(9873)
+      cell_colour = col["flag"]
+    elif cell[3] == "dig":
+      #add the if zero thing
+      cell_ch = str(cell[2])
+      cell_colour = col[cell_ch]
+    elif cell[3] == "blasted":
+      cell_ch = chr(10040)
+      cell_colour = col["cover"]
   
   if reverse:
       cell_colour = curses.A_REVERSE
   stdscr.addstr(cell[0], cell[1], cell_ch, cell_colour)
+
+def flagcell(cell):
+  if cell[3] == "flag":
+    cell[3] = "covered"
+  elif cell[3] == "covered":
+    cell[3] = "flag"
+def digcell(cell):
+  if cell[3] == "covered":
+    if cell[2] == -1:
+      cell[3] = "blasted"
+    else:
+      cell[3] = "dig"
+def openaround(cell, board):
+  #if cell[3] == "dig":
+    
+
+
+
+
+def debugmsg(stdscr, board, cell, show_surrounding = False):
+  stdscr.addstr(0, 0, str(cell))
       
         
 
@@ -154,8 +188,12 @@ def field(stdscr):
     elif userKey in [curses.KEY_DOWN, 106]:
         if nr<size[0]-1:
           nr = r+1
+    elif userKey == 102:
+      flagcell(board[r][c])
+    elif userKey == 100:
+      digcell(board[r][c])
 
-
+    debugmsg(stdscr, board, board[nr][nc])
     paintcell(stdscr, board[r][c], col)
     paintcell(stdscr, board[nr][nc], col, True)
     r, c = nr, nc
