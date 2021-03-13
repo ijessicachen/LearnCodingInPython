@@ -138,15 +138,25 @@ def digcell(cell):
       cell[3] = "blasted"
     else:
       cell[3] = "dig"
-def openaround(board):
+def openaround(stdscr, col, board, r, c):
   flagNum = 0
-  if board[3] == "dig":
-    for board[0] in [r-1, r, r+1]:
-      for board[1] in [c-1, c, c+1]:
-        if board[3] == "flag":
+  if board[r][c][3] == "dig":
+    for row in [r-1, r, r+1]:
+      for column in [c-1, c, c+1]:
+        if board[row][column][3] == "flag":
           flagNum += 1
-    if board[2] == flagNum:
-      if 
+    if board[r][c][2] == flagNum:
+      for row in [r-1, r, r+1]:
+        for column in [c-1, c, c+1]:
+            if board[row][column][3] != "flag":
+              if board[row][column][3] == "covered":
+                if board[row][column][2] == -1:
+                  board[row][column][3] = "blasted"
+                else:
+                  board[row][column][3] = "dig"
+                paintcell(stdscr, board[row][column], col)
+                openaround(stdscr, col, board, row, column)
+          
       
     
 
@@ -154,8 +164,14 @@ def openaround(board):
 
 
 def debugmsg(stdscr, board, cell, show_surrounding = False):
-  stdscr.addstr(0, 0, "                                         ")
+  stdscr.addstr(0, 0, " " * 30)
   stdscr.addstr(0, 0, str(cell))
+
+def printfield(center_yx, size):
+  field = initfield(center_yx, size)
+
+  for r in range(0, size[0]):
+    print(field[r])
       
         
 
@@ -206,6 +222,8 @@ def field(stdscr):
       flagcell(board[r][c])
     elif userKey == 100:
       digcell(board[r][c])
+    elif userKey == 32:
+      openaround(stdscr, col, board, r, c)
 
     debugmsg(stdscr, board, board[nr][nc])
     paintcell(stdscr, board[r][c], col)
@@ -213,3 +231,6 @@ def field(stdscr):
     r, c = nr, nc
 
 curses.wrapper(field)
+
+
+printfield([10, 10], [4, 4])
