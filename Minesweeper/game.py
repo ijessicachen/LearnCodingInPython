@@ -26,7 +26,7 @@ def initfield(center, size):
 
   #generate the bombs!
   i = 0 #track the bomb count
-  while i < math.prod(size) // 7:
+  while i < math.prod(size) // 5:
     index = random.randint(0, math.prod(size)-1)
     #figure out our r c
     r = index // size[1]
@@ -140,20 +140,35 @@ def digcell(cell):
       cell[3] = "dig"
 def openaround(stdscr, col, board, r, c):
   flagNum = 0
+  #change all numerical values to soemthing that can work for all
+  l = r-1
+  ri = r+1
+  u = c-1
+  d = c+1
+  for row in [l, r, ri]:
+    for column in [u, c, d]:
+      if board[row][column][0] == 8:
+        u = c
+      if board[row][column][0] == 27:
+        d = c
+      if board[row][column][1] == 13:
+        l = r
+      if board[row][column][1] == 51:
+        ri = r
   if board[r][c][3] == "dig":
-    for row in [r-1, r, r+1]:
-      for column in [c-1, c, c+1]:
+    for row in [l, r, ri]:
+      for column in [u, c, d]:  
         if board[row][column][3] == "flag":
           flagNum += 1
     if board[r][c][2] == flagNum:
-      for row in [r-1, r, r+1]:
-        for column in [c-1, c, c+1]:
-            if board[row][column][3] != "flag":
+      for row in [l, r, ri]:
+        for column in [u, c, d]:  
+           if board[row][column][3] != "flag":
               if board[row][column][3] == "covered":
                 if board[row][column][2] == -1:
                   board[row][column][3] = "blasted"
-                else:
-                  board[row][column][3] = "dig"
+                else:  
+                    board[row][column][3] = "dig"
                 paintcell(stdscr, board[row][column], col)
                 openaround(stdscr, col, board, row, column)
           
