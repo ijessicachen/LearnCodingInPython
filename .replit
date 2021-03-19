@@ -1,0 +1,4 @@
+#Choose what the run button runs
+
+language = "python3"
+run = "python3 Minesweeper/game.py"

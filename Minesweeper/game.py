@@ -69,7 +69,7 @@ def colours():
     curses.init_pair(i + 1, i, -1)
   #return colors in a dictionary type
   return{
-    "cover": curses.color_pair(16),
+    "cover": curses.color_pair(1),
     "0": curses.color_pair(1),
     "-1": curses.color_pair(2),
     "1": curses.color_pair(19),
@@ -80,15 +80,16 @@ def colours():
     "6": curses.color_pair(47),
     "7": curses.color_pair(191),
     "8": curses.color_pair(227),
-    "flag": curses.color_pair(197)
+    "flag": curses.color_pair(197),
+    "blasted": curses.color_pair(16)
   }
 
 
-def paintfield(stdscr, board, size, col):
+def paintfield(stdscr, board, col, show):
   #painting the board
-  for r in range(0, size[0]):
-    for c in range(0, size[1]):
-      paintcell(stdscr, board[r][c], col)
+  for r in range(0, len(board)):
+    for c in range(0, len(board[0])):
+      paintcell(stdscr, board[r][c], col, False, show)
 
 
 
@@ -106,7 +107,7 @@ def paintcell(stdscr, cell, col, reverse=False, show=False):
       cell_colour = col[cell_ch]
   else:
     if cell[3] == "covered":
-      cell_ch = chr(9603)
+      cell_ch = chr(9608)
       cell_colour = col["cover"]
     elif cell[3] == "flag":
       cell_ch = chr(9873)
@@ -121,11 +122,12 @@ def paintcell(stdscr, cell, col, reverse=False, show=False):
         cell_colour = col[cell_ch]
     elif cell[3] == "blasted":
       cell_ch = chr(10040)
-      cell_colour = col["cover"]
+      cell_colour = col["blasted"]
   
   if reverse:
       cell_colour = curses.A_REVERSE
   stdscr.addstr(cell[0], cell[1], cell_ch, cell_colour)
+
 
 def flagcell(cell):
   if cell[3] == "flag":
@@ -138,39 +140,37 @@ def digcell(cell):
       cell[3] = "blasted"
     else:
       cell[3] = "dig"
+
 def openaround(stdscr, col, board, r, c):
   flagNum = 0
-  #change all numerical values to soemthing that can work for all
-  l = r-1
-  ri = r+1
-  u = c-1
-  d = c+1
-  for row in [l, r, ri]:
-    for column in [u, c, d]:
-      if board[row][column][0] == 8:
-        u = c
-      if board[row][column][0] == 27:
-        d = c
-      if board[row][column][1] == 13:
-        l = r
-      if board[row][column][1] == 51:
-        ri = r
   if board[r][c][3] == "dig":
-    for row in [l, r, ri]:
-      for column in [u, c, d]:  
+    for row in [r-1, r, r+1]:
+      for column in [c-1, c, c+1]: 
+        if row < 0 or row >= len(board[0]) or column < 0 or column >= len(board[0]):
+          continue
         if board[row][column][3] == "flag":
           flagNum += 1
     if board[r][c][2] == flagNum:
-      for row in [l, r, ri]:
-        for column in [u, c, d]:  
-           if board[row][column][3] != "flag":
+      for row in [r-1, r, r+1]:
+        for column in [c-1, c, c+1]:
+            if row < 0 or row >= len(board[0]) or column < 0 or column >= len(board[0]):
+              continue  
+            if board[row][column][3] != "flag":
               if board[row][column][3] == "covered":
                 if board[row][column][2] == -1:
                   board[row][column][3] = "blasted"
                 else:  
                     board[row][column][3] = "dig"
                 paintcell(stdscr, board[row][column], col)
+                if board[row][column][3] == "blasted":
+                  gameOver(stdscr, board, col)
                 openaround(stdscr, col, board, row, column)
+
+
+def gameOver(stdscr, board, col):
+  paintfield(stdscr, board, col, True)
+
+
           
       
     
@@ -208,7 +208,7 @@ def field(stdscr):
 
   col = colours()
   textpad.rectangle(stdscr, board[r][c][0] - 1, board[r][c][1] - 2, center[0] + size[0]//2, center[1] + size[1]+1)
-  paintfield(stdscr, board, size, col)
+  paintfield(stdscr, board, col, False)
 
   #paint cell [r][c] reverse
   paintcell(stdscr, board[r][c], col, True)
@@ -237,6 +237,10 @@ def field(stdscr):
       flagcell(board[r][c])
     elif userKey == 100:
       digcell(board[r][c])
+      if board[r][c][3] == "blasted":
+        gameOver(stdscr, board, col)
+      if board[r][c][2] == 0:
+        openaround(stdscr, col, board, r, c)
     elif userKey == 32:
       openaround(stdscr, col, board, r, c)
 
