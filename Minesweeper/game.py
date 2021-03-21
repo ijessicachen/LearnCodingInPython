@@ -66,7 +66,12 @@ def colours():
 
   for i in range(0, curses.COLORS):
     #initialize color pair
-    curses.init_pair(i + 1, i, -1)
+    if i == 15:
+      curses.init_pair(i + 1, i, 1)
+    elif i == 16:
+      curses.init_pair(i + 1, i, 196)
+    else:
+      curses.init_pair(i + 1, i, -1)
   #return colors in a dictionary type
   return{
     "cover": curses.color_pair(1),
@@ -81,6 +86,7 @@ def colours():
     "7": curses.color_pair(191),
     "8": curses.color_pair(227),
     "flag": curses.color_pair(197),
+    "misflag": curses.color_pair(17),
     "blasted": curses.color_pair(16)
   }
 
@@ -103,8 +109,12 @@ def paintcell(stdscr, cell, col, reverse=False, show=False):
       cell_ch = " "
       cell_colour = col["-1"]
     else:
-      cell_ch = str(cell[2])
-      cell_colour = col[cell_ch]
+      if cell[3] == "flag":
+        cell_ch = chr(9873)
+        cell_colour = col["misflag"]
+      else:
+        cell_ch = str(cell[2])
+        cell_colour = col[cell_ch]
   else:
     if cell[3] == "covered":
       cell_ch = chr(9608)
@@ -113,7 +123,7 @@ def paintcell(stdscr, cell, col, reverse=False, show=False):
       cell_ch = chr(9873)
       cell_colour = col["flag"]
     elif cell[3] == "dig":
-      #add the if zero thing
+      #so zeroes will just be blank
       if cell[2] == 0:
         cell_ch = str(" ")
         cell_colour = False
@@ -123,6 +133,7 @@ def paintcell(stdscr, cell, col, reverse=False, show=False):
     elif cell[3] == "blasted":
       cell_ch = chr(10040)
       cell_colour = col["blasted"]
+      reverse = False
   
   if reverse:
       cell_colour = curses.A_REVERSE
@@ -161,13 +172,13 @@ def openaround(stdscr, col, board, r, c):
                   board[row][column][3] = "blasted"
                 else:  
                     board[row][column][3] = "dig"
-                paintcell(stdscr, board[row][column], col)
                 if board[row][column][3] == "blasted":
                   gameOver(stdscr, board, col)
+                paintcell(stdscr, board[row][column], col)
                 openaround(stdscr, col, board, row, column)
 
 
-def gameOver(stdscr, board, col):
+def gameOver(stdscr, board, col): 
   paintfield(stdscr, board, col, True)
 
 
