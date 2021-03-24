@@ -181,7 +181,7 @@ def openaround(stdscr, col, board, r, c, center, size, flags, bombs):
                 if board[row][column][3] == "blasted":
                   gameOver(stdscr, board, col, center, size, flags, bombs)
                 paintcell(stdscr, board[row][column], col)
-                openaround(stdscr, col, board, row, column)
+                openaround(stdscr, col, board, row, column, center, size, flags, bombs)
 
 def flagCount(stdscr, flags, bombs, center, size):
   fCount = bombs-flags
