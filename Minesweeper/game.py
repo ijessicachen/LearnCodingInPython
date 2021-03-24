@@ -25,7 +25,8 @@ def initfield(center, size):
     c= 0
 
   #generate the bombs!
-  i = 0 #track the bomb count
+  #track the bomb count
+  i = 0
   while i < math.prod(size) // 5:
     index = random.randint(0, math.prod(size)-1)
     #figure out our r c
@@ -56,7 +57,7 @@ def initfield(center, size):
               board[r][c][2] = board[r][c][2] + 1
 
 
-  return board
+  return (board, i)
 
 
 def colours():
@@ -77,9 +78,9 @@ def colours():
     "cover": curses.color_pair(1),
     "0": curses.color_pair(1),
     "-1": curses.color_pair(2),
-    "1": curses.color_pair(19),
-    "2": curses.color_pair(22),
-    "3": curses.color_pair(34),
+    "1": curses.color_pair(20),
+    "2": curses.color_pair(34),
+    "3": curses.color_pair(40),
     "4": curses.color_pair(38),
     "5": curses.color_pair(85),
     "6": curses.color_pair(47),
@@ -91,11 +92,16 @@ def colours():
   }
 
 
-def paintfield(stdscr, board, col, show):
+def paintfield(stdscr, board, col, show, center, size, flags, bombs):
   #painting the board
   for r in range(0, len(board)):
     for c in range(0, len(board[0])):
       paintcell(stdscr, board[r][c], col, False, show)
+
+  #Title
+  stdscr.addstr(center[0] - size[0]//2 - 2, center[1] - 5, "Minesweeper")
+  #Flag Count
+  flagCount(stdscr, flags, bombs, center, size)
 
 
 
@@ -152,7 +158,7 @@ def digcell(cell):
     else:
       cell[3] = "dig"
 
-def openaround(stdscr, col, board, r, c):
+def openaround(stdscr, col, board, r, c, center, size, flags, bombs):
   flagNum = 0
   if board[r][c][3] == "dig":
     for row in [r-1, r, r+1]:
@@ -173,13 +179,17 @@ def openaround(stdscr, col, board, r, c):
                 else:  
                     board[row][column][3] = "dig"
                 if board[row][column][3] == "blasted":
-                  gameOver(stdscr, board, col)
+                  gameOver(stdscr, board, col, center, size, flags, bombs)
                 paintcell(stdscr, board[row][column], col)
                 openaround(stdscr, col, board, row, column)
 
+def flagCount(stdscr, flags, bombs, center, size):
+  fCount = bombs-flags
+  stdscr.addstr(center[0] - size[0]//2 - 2, center[1] - size[1]//2 - 6, chr(9873) + " " + str(fCount) + "     ")
 
-def gameOver(stdscr, board, col): 
-  paintfield(stdscr, board, col, True)
+
+def gameOver(stdscr, board, col, center, size, flags, bombs): 
+  paintfield(stdscr, board, col, True, center, size, flags, bombs)
 
 
           
@@ -215,14 +225,18 @@ def field(stdscr):
   size = [20, 20]
 
   #call the field
-  board = initfield(center, size)
+  board, bombs = initfield(center, size)
+
+  #other variables
+  flags = 0
 
   col = colours()
   textpad.rectangle(stdscr, board[r][c][0] - 1, board[r][c][1] - 2, center[0] + size[0]//2, center[1] + size[1]+1)
-  paintfield(stdscr, board, col, False)
+  paintfield(stdscr, board, col, False, center, size, flags, bombs)
 
   #paint cell [r][c] reverse
   paintcell(stdscr, board[r][c], col, True)
+
   
 
   #cell[r][c] but reverse
@@ -232,7 +246,7 @@ def field(stdscr):
     userKey = stdscr.getch()
     if userKey in [27, 113]:
       break
-    elif userKey in [curses.KEY_RIGHT, 108]:
+    if userKey in [curses.KEY_RIGHT, 108]:
         if nc<size[1]-1:
           nc = c+1
     elif userKey in [curses.KEY_LEFT, 104]:
@@ -246,15 +260,21 @@ def field(stdscr):
           nr = r+1
     elif userKey == 102:
       flagcell(board[r][c])
+      if board[r][c][3] == "flag":
+        flags += 1
+      if board[r][c][3] == "covered":
+        flags -= 1
     elif userKey == 100:
       digcell(board[r][c])
       if board[r][c][3] == "blasted":
-        gameOver(stdscr, board, col)
+        gameOver(stdscr, board, col, center, size, flags, bombs)
       if board[r][c][2] == 0:
-        openaround(stdscr, col, board, r, c)
+        openaround(stdscr, col, board, r, c, center, size, flags, bombs)
     elif userKey == 32:
-      openaround(stdscr, col, board, r, c)
+      openaround(stdscr, col, board, r, c, center, size, flags, bombs)
 
+    flagCount(stdscr, flags, bombs, center, size)
+    
     debugmsg(stdscr, board, board[nr][nc])
     paintcell(stdscr, board[r][c], col)
     paintcell(stdscr, board[nr][nc], col, True)
