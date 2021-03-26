@@ -7,6 +7,7 @@ import curses
 from curses import textpad
 import random
 import math
+import datetime
 
 def initfield(center, size):
   
@@ -158,7 +159,7 @@ def digcell(cell):
     else:
       cell[3] = "dig"
 
-def openaround(stdscr, col, board, r, c, center, size, flags, bombs):
+def openaround(stdscr, col, board, r, c, center, size, flags, bombs, start):
   flagNum = 0
   if board[r][c][3] == "dig":
     for row in [r-1, r, r+1]:
@@ -179,17 +180,25 @@ def openaround(stdscr, col, board, r, c, center, size, flags, bombs):
                 else:  
                     board[row][column][3] = "dig"
                 if board[row][column][3] == "blasted":
-                  gameOver(stdscr, board, col, center, size, flags, bombs)
+                  gameOver(stdscr, board, col, center, size, flags, bombs, start)
                 paintcell(stdscr, board[row][column], col)
-                openaround(stdscr, col, board, row, column, center, size, flags, bombs)
+                openaround(stdscr, col, board, row, column, center, size, flags, bombs, start)
 
 def flagCount(stdscr, flags, bombs, center, size):
   fCount = bombs-flags
   stdscr.addstr(center[0] - size[0]//2 - 2, center[1] - size[1]//2 - 6, chr(9873) + " " + str(fCount) + "     ")
+def stopwatch(stdscr, center, size, start, run = True):
+  if run and start != 0:
+    elapsed = datetime.datetime.now().second - start
+    stdscr.addstr(center[0] - size[0]//2 - 2, center[1] + size[1]//2 + 4, str(elapsed) + "   ")
+  elif start == 0:
+    stdscr.addstr(center[0] - size[0]//2 - 2, center[1] + size[1]//2 + 4, "0" + "   ")
 
 
-def gameOver(stdscr, board, col, center, size, flags, bombs): 
+
+def gameOver(stdscr, board, col, center, size, flags, bombs, start): 
   paintfield(stdscr, board, col, True, center, size, flags, bombs)
+  stopwatch(stdscr, center, size, start, False)
 
 
           
@@ -217,6 +226,10 @@ def field(stdscr):
   curses.curs_set(0)
   r, c = 0, 0
 
+  #make the stopwatch work
+  stdscr.nodelay(1)
+  stdscr.timeout(50)
+  
   #get dimensions of the field
   sh, sw = stdscr.getmaxyx()
   #center variable
@@ -229,6 +242,8 @@ def field(stdscr):
 
   #other variables
   flags = 0
+  start = 0
+  hold = 0
 
   col = colours()
   textpad.rectangle(stdscr, board[r][c][0] - 1, board[r][c][1] - 2, center[0] + size[0]//2, center[1] + size[1]+1)
@@ -266,14 +281,20 @@ def field(stdscr):
         flags -= 1
     elif userKey == 100:
       digcell(board[r][c])
+      if hold == 0:
+        start = datetime.datetime.now().second
+        hold += 1
       if board[r][c][3] == "blasted":
-        gameOver(stdscr, board, col, center, size, flags, bombs)
+        gameOver(stdscr, board, col, center, size, flags, bombs, start)
       if board[r][c][2] == 0:
-        openaround(stdscr, col, board, r, c, center, size, flags, bombs)
+        openaround(stdscr, col, board, r, c, center, size, flags, bombs, start)
     elif userKey == 32:
-      openaround(stdscr, col, board, r, c, center, size, flags, bombs)
+      openaround(stdscr, col, board, r, c, center, size, flags, bombs, start)
 
-    flagCount(stdscr, flags, bombs, center, size)
+    #NOTE: This only stops the stopwatch if you blast the cell you are on, meaning if you die because of openaround the stopwatch will continue
+    if board[r][c][3] != "blasted":
+      flagCount(stdscr, flags, bombs, center, size)
+      stopwatch(stdscr, center, size, start, True)
     
     debugmsg(stdscr, board, board[nr][nc])
     paintcell(stdscr, board[r][c], col)
