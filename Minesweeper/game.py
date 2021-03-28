@@ -28,11 +28,11 @@ def initfield(center, size):
   #generate the bombs!
   #track the bomb count
   i = 0
-  while i < math.prod(size) // 5:
+  while i < 40:
     index = random.randint(0, math.prod(size)-1)
     #figure out our r c
     r = index // size[1]
-    c = index - r * size[1]
+    c = index - r*size[1]
     if board[r][c][2] == -1:
       continue
     else:
@@ -93,7 +93,7 @@ def colours():
   }
 
 
-def paintfield(stdscr, board, col, show, center, size, flags, bombs):
+def paintfield(stdscr, board, col, center, size, flags, bombs, show = False):
   #painting the board
   for r in range(0, len(board)):
     for c in range(0, len(board[0])):
@@ -188,18 +188,22 @@ def flagCount(stdscr, flags, bombs, center, size):
   fCount = bombs-flags
   stdscr.addstr(center[0] - size[0]//2 - 2, center[1] - size[1]//2 - 6, chr(9873) + " " + str(fCount) + "     ")
 def stopwatch(stdscr, center, size, start, run = True):
-  if run and start != 0:
+  if run and start != -1:
     elapsed = datetime.datetime.now().second - start
     stdscr.addstr(center[0] - size[0]//2 - 2, center[1] + size[1]//2 + 4, str(elapsed) + "   ")
-  elif start == 0:
+  elif start == -1:
     stdscr.addstr(center[0] - size[0]//2 - 2, center[1] + size[1]//2 + 4, "0" + "   ")
 
 
 
 def gameOver(stdscr, board, col, center, size, flags, bombs, start): 
-  paintfield(stdscr, board, col, True, center, size, flags, bombs)
+  paintfield(stdscr, board, col, center, size, flags, bombs, True)
   stopwatch(stdscr, center, size, start, False)
-
+  stdscr.addstr(center[0] + size[0]//2 + 1, center[1] - 4, "game over")
+  stdscr.addstr(center[0] + size[0]//2 + 2, center[1] - 16, "Press enter/return to play again")
+  #Turn of the nodelay and reset the Timeou
+  #stdscr.nodelay(False)
+  #stdscr.timeout
 
           
       
@@ -218,36 +222,23 @@ def printfield(center_yx, size):
   for r in range(0, size[0]):
     print(field[r])
       
-        
 
 
-def field(stdscr):
-  #turn off the curser
-  curses.curs_set(0)
-  r, c = 0, 0
 
-  #make the stopwatch work
-  stdscr.nodelay(1)
-  stdscr.timeout(50)
-  
-  #get dimensions of the field
-  sh, sw = stdscr.getmaxyx()
-  #center variable
-  center = [sh//2, sw//2]
-  #set screen size variables
-  size = [20, 20]
-
-  #call the field
+def gamegame(stdscr, size, center, r, c):
+#call the field
   board, bombs = initfield(center, size)
+  stdscr.addstr(center[0] + size[0]//3 + 4, center[1] - size[1]//2, " " * size[1]*2)
+  stdscr.addstr(center[0] + size[0]//3 + 5, center[1] - size[1], " " * size[1]*2)
 
   #other variables
   flags = 0
-  start = 0
+  start = -1
   hold = 0
 
   col = colours()
   textpad.rectangle(stdscr, board[r][c][0] - 1, board[r][c][1] - 2, center[0] + size[0]//2, center[1] + size[1]+1)
-  paintfield(stdscr, board, col, False, center, size, flags, bombs)
+  paintfield(stdscr, board, col, center, size, flags, bombs, False)
 
   #paint cell [r][c] reverse
   paintcell(stdscr, board[r][c], col, True)
@@ -284,23 +275,61 @@ def field(stdscr):
       if hold == 0:
         start = datetime.datetime.now().second
         hold += 1
-      if board[r][c][3] == "blasted":
-        gameOver(stdscr, board, col, center, size, flags, bombs, start)
       if board[r][c][2] == 0:
         openaround(stdscr, col, board, r, c, center, size, flags, bombs, start)
     elif userKey == 32:
       openaround(stdscr, col, board, r, c, center, size, flags, bombs, start)
-
-    #NOTE: This only stops the stopwatch if you blast the cell you are on, meaning if you die because of openaround the stopwatch will continue
-    if board[r][c][3] != "blasted":
-      flagCount(stdscr, flags, bombs, center, size)
-      stopwatch(stdscr, center, size, start, True)
     
     debugmsg(stdscr, board, board[nr][nc])
     paintcell(stdscr, board[r][c], col)
     paintcell(stdscr, board[nr][nc], col, True)
     r, c = nr, nc
 
+    #NOTE: This only stops the stopwatch if you blast the cell you are on, meaning if you die because of openaround the stopwatch will continue
+    if board[r][c][3] == "blasted":
+        gameOver(stdscr, board, col, center, size, flags, bombs, start)
+        break
+    elif board[r][c][3] != "blasted":
+      flagCount(stdscr, flags, bombs, center, size)
+      stopwatch(stdscr, center, size, start, True)
+    
+
+
+
+
+def field(stdscr):
+  #turn off the curser
+  curses.curs_set(0)
+  r, c = 0, 0
+
+  #make the stopwatch work
+  stdscr.nodelay(1)
+  stdscr.timeout(50)
+  
+  #get dimensions of the field
+  sh, sw = stdscr.getmaxyx()
+  #center variable
+  center = [sh//2, sw//2]
+  
+  
+  
+  #set screen size variables
+  size = [16, 16]
+
+  #Literal game
+  gamegame(stdscr, size, center, r, c)
+
+  while True:
+    #hold the scrren
+    userkey = stdscr.getch()
+    if userkey == ord('q'):
+      break
+    elif userkey == 10:
+      gamegame(stdscr, size, center, r, c)
+    else:
+      continue
+
+  
 curses.wrapper(field)
 
 
