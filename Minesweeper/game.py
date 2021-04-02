@@ -110,8 +110,13 @@ def paintcell(stdscr, cell, col, reverse=False, show=False):
 
   if show:
     if cell[2] == -1:
-      cell_ch = chr(10040)
-      cell_colour = col["-1"]
+      if cell[3] == "blasted":
+        cell_ch = chr(10040)
+        cell_colour = col["blasted"]
+        reverse = False
+      else:
+        cell_ch = chr(10040)
+        cell_colour = col["-1"]
     elif cell[2] == 0:
       cell_ch = " "
       cell_colour = col["-1"]
@@ -160,6 +165,7 @@ def digcell(cell):
       cell[3] = "dig"
 
 def openaround(stdscr, col, board, r, c, center, size, flags, bombs, start):
+  status = True
   flagNum = 0
   if board[r][c][3] == "dig":
     for row in [r-1, r, r+1]:
@@ -181,14 +187,16 @@ def openaround(stdscr, col, board, r, c, center, size, flags, bombs, start):
                     board[row][column][3] = "dig"
                 if board[row][column][3] == "blasted":
                   gameOver(stdscr, board, col, center, size, flags, bombs, start)
+                  status = False
                 paintcell(stdscr, board[row][column], col)
                 openaround(stdscr, col, board, row, column, center, size, flags, bombs, start)
+  return status
 
 def flagCount(stdscr, flags, bombs, center, size):
   fCount = bombs-flags
   stdscr.addstr(center[0] - size[0]//2 - 2, center[1] - size[1]//2 - 6, chr(9873) + " " + str(fCount) + "     ")
 def stopwatch(stdscr, center, size, start, run = True):
-  if run and start != -1:
+  if run == True and start != -1:
     elapsed = datetime.datetime.now().second - start
     stdscr.addstr(center[0] - size[0]//2 - 2, center[1] + size[1]//2 + 4, str(elapsed) + "   ")
   elif start == -1:
@@ -204,7 +212,9 @@ def gameOver(stdscr, board, col, center, size, flags, bombs, start):
   #Turn of the nodelay and reset the Timeou
   #stdscr.nodelay(False)
   #stdscr.timeout
-
+def youWin(stdscr, board, col, center, size, flags, bombs, start):
+  #Okay just as a note I'll make it so they win when they flag all AND they reveal all the board
+  stopwatch(stdscr, center, size, start, False)
           
       
     
@@ -235,6 +245,7 @@ def gamegame(stdscr, size, center, r, c):
   flags = 0
   start = -1
   hold = 0
+  live = True
 
   col = colours()
   textpad.rectangle(stdscr, board[r][c][0] - 1, board[r][c][1] - 2, center[0] + size[0]//2, center[1] + size[1]+1)
@@ -276,9 +287,15 @@ def gamegame(stdscr, size, center, r, c):
         start = datetime.datetime.now().second
         hold += 1
       if board[r][c][2] == 0:
-        openaround(stdscr, col, board, r, c, center, size, flags, bombs, start)
+        live = openaround(stdscr, col, board, r, c, center, size, flags, bombs, start)
+        if live == False:
+            gameOver(stdscr, board, col, center, size, flags, bombs, start)
+            break
     elif userKey == 32:
-      openaround(stdscr, col, board, r, c, center, size, flags, bombs, start)
+      live = openaround(stdscr, col, board, r, c, center, size, flags, bombs, start)
+      if live == False:
+            gameOver(stdscr, board, col, center, size, flags, bombs, start)
+            break
     
     debugmsg(stdscr, board, board[nr][nc])
     paintcell(stdscr, board[r][c], col)
@@ -287,8 +304,8 @@ def gamegame(stdscr, size, center, r, c):
 
     #NOTE: This only stops the stopwatch if you blast the cell you are on, meaning if you die because of openaround the stopwatch will continue
     if board[r][c][3] == "blasted":
-        gameOver(stdscr, board, col, center, size, flags, bombs, start)
-        break
+      gameOver(stdscr, board, col, center, size, flags, bombs, start)
+      break
     elif board[r][c][3] != "blasted":
       flagCount(stdscr, flags, bombs, center, size)
       stopwatch(stdscr, center, size, start, True)
