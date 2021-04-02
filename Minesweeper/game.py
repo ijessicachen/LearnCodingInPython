@@ -113,7 +113,7 @@ def paintcell(stdscr, cell, col, reverse=False, show=False):
       if cell[3] == "blasted":
         cell_ch = chr(10040)
         cell_colour = col["blasted"]
-        reverse = False
+        #reverse = False
       else:
         cell_ch = chr(10040)
         cell_colour = col["-1"]
@@ -145,7 +145,7 @@ def paintcell(stdscr, cell, col, reverse=False, show=False):
     elif cell[3] == "blasted":
       cell_ch = chr(10040)
       cell_colour = col["blasted"]
-      reverse = False
+      #reverse = False
   
   if reverse:
       cell_colour = curses.A_REVERSE
@@ -212,9 +212,12 @@ def gameOver(stdscr, board, col, center, size, flags, bombs, start):
   #Turn of the nodelay and reset the Timeou
   #stdscr.nodelay(False)
   #stdscr.timeout
-def youWin(stdscr, board, col, center, size, flags, bombs, start):
-  #Okay just as a note I'll make it so they win when they flag all AND they reveal all the board
+def youWin(stdscr, center, size, start):
+  #Okay just as a note I'll make it so they win when they flag all AND they reveal all the board.
+  #Both conditions are in the big gamegame loop
   stopwatch(stdscr, center, size, start, False)
+  stdscr.addstr(center[0] + size[0]//2 + 1, center[1] - 7, "$$$ YOU WIN $$$")
+  stdscr.addstr(center[0] + size[0]//2 + 2, center[1] - 16, "Press enter/return to play again")
           
       
     
@@ -228,7 +231,6 @@ def debugmsg(stdscr, board, cell, show_surrounding = False):
 
 def printfield(center_yx, size):
   field = initfield(center_yx, size)
-
   for r in range(0, size[0]):
     print(field[r])
       
@@ -302,13 +304,25 @@ def gamegame(stdscr, size, center, r, c):
     paintcell(stdscr, board[nr][nc], col, True)
     r, c = nr, nc
 
-    #NOTE: This only stops the stopwatch if you blast the cell you are on, meaning if you die because of openaround the stopwatch will continue
+    #NOTE: This only stops the stopwatch if you blast the cell you are on, meaning if you die because of openaround the stopwatch will continue. Change later obviously
     if board[r][c][3] == "blasted":
       gameOver(stdscr, board, col, center, size, flags, bombs, start)
       break
     elif board[r][c][3] != "blasted":
       flagCount(stdscr, flags, bombs, center, size)
       stopwatch(stdscr, center, size, start, True)
+
+
+    #NOTE: Add the dig all other cells requirement either here or in the function
+    if flags == bombs:
+      d = 0
+      for r in range(0, len(board)):
+        for c in range(0, len(board[0])):
+          if board[r][c][3] == "covered":
+            d += 1
+      if d == 0:
+        youWin(stdscr, center, size, start)
+        break
     
 
 
@@ -337,7 +351,7 @@ def field(stdscr):
   gamegame(stdscr, size, center, r, c)
 
   while True:
-    #hold the scrren
+    #hold the screen between games
     userkey = stdscr.getch()
     if userkey == ord('q'):
       break
