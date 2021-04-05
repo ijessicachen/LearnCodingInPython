@@ -196,11 +196,27 @@ def flagCount(stdscr, flags, bombs, center, size):
   fCount = bombs-flags
   stdscr.addstr(center[0] - size[0]//2 - 2, center[1] - size[1]//2 - 6, chr(9873) + " " + str(fCount) + "     ")
 def stopwatch(stdscr, center, size, start, run = True):
+  min = -1
   if run == True and start != -1:
-    elapsed = datetime.datetime.now().second - start
+    if datetime.datetime.now().second == 59:
+      min += 1
+    if min == -1:
+      elapsed = datetime.datetime.now().second - start
+    else:
+      elapsed = start + (60-start) #+ datetime.datetime.now().second + min*60
+    # The above WAS datetime.datetime.now().second - start
     stdscr.addstr(center[0] - size[0]//2 - 2, center[1] + size[1]//2 + 4, str(elapsed) + "   ")
   elif start == -1:
     stdscr.addstr(center[0] - size[0]//2 - 2, center[1] + size[1]//2 + 4, "0" + "   ")
+
+  #Okay I think the problem right now is that the seconds only go up to 59 before resetting at 0 or 1 since datetime is hours, minutes, AND seconds so once it reaches 60 it resets and the minutes increases and etc.
+  #okay so it goes from 59 to 0
+
+  #The below algorithms will be what elapsed is equal to
+  #When it reaches 0 the algorithm I think shoul be start + (60-start) + datetime.datetime.now().second + VARIABLE*60
+  #Okay so the variable should be 0 the first time it reaches 0 and then increase by one every time after that, I htink that will work.
+  stdscr.addstr(21, 0, "  ")
+  stdscr.addstr(21, 0, str(datetime.datetime.now().second)
 
 
 
@@ -218,6 +234,13 @@ def youWin(stdscr, center, size, start):
   stopwatch(stdscr, center, size, start, False)
   stdscr.addstr(center[0] + size[0]//2 + 1, center[1] - 7, "$$$ YOU WIN $$$")
   stdscr.addstr(center[0] + size[0]//2 + 2, center[1] - 16, "Press enter/return to play again")
+def coverCheck(stdscr, board, r, c):
+  check = 0
+  for r in range(0, len(board)):
+      for c in range(0, len(board[0])):
+        if board[r][c][3] != "covered":
+          check += 1
+  return check 
           
       
     
@@ -313,16 +336,30 @@ def gamegame(stdscr, size, center, r, c):
       stopwatch(stdscr, center, size, start, True)
 
 
-    #NOTE: Add the dig all other cells requirement either here or in the function
-    if flags == bombs:
-      d = 0
-      for r in range(0, len(board)):
-        for c in range(0, len(board[0])):
-          if board[r][c][3] == "covered":
-            d += 1
-      if d == 0:
-        youWin(stdscr, center, size, start)
-        break
+    #NEW IDEA: Make a function that checks the stuff in a loop so bad stuff won't happen. OR make the function the youWin thing just, uh, no, nvm.
+    check = coverCheck(stdscr, board, r, c)
+    if check == size[0] * size[1]:
+      youWin(stdscr, center, size, start)
+      break
+    """
+    I DEFINITELY BROKE SOMETHING HERE, FIX IT
+    d = 0
+    for r in range(0, len(board)):
+      for c in range(0, len(board[0])):
+        if board[r][c][3] == "covered":
+          break
+        if d == size[0] * size[1] and flags == bombs:
+          youWin(stdscr, center, size, start)
+          d = -1
+        else:
+          continue
+    if d == -1:
+      break
+    """
+
+    stdscr.addstr(20, 0, str(start))
+  
+      
     
 
 
