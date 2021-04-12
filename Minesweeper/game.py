@@ -164,8 +164,8 @@ def digcell(cell):
     else:
       cell[3] = "dig"
 
-def openaround(stdscr, col, board, r, c, center, size, flags, bombs, start, elapsed):
-  status = True
+def openaround(stdscr, col, board, r, c):
+  #status = True
   flagNum = 0
   if board[r][c][3] == "dig":
     for row in [r-1, r, r+1]:
@@ -185,25 +185,24 @@ def openaround(stdscr, col, board, r, c, center, size, flags, bombs, start, elap
                   board[row][column][3] = "blasted"
                 else:  
                     board[row][column][3] = "dig"
-                if board[row][column][3] == "blasted":
-                  gameOver(stdscr, board, col, center, size, flags, bombs, start, elapsed)
-                  status = False
+                #if board[row][column][3] == "blasted":
+                 # gameOver(stdscr, board, col, center, size, flags, bombs, start, elapsed)
+                  #status = False
                 paintcell(stdscr, board[row][column], col)
-                openaround(stdscr, col, board, row, column, center, size, flags, bombs, start, elapsed)
-  return status
+                openaround(stdscr, col, board, row, column)
+  #return status
 
 def flagCount(stdscr, flags, bombs, center, size):
   fCount = bombs-flags
   stdscr.addstr(center[0] - size[0]//2 - 2, center[1] - size[1]//2 - 6, chr(9873) + " " + str(fCount) + "     ")
 def stopwatch(stdscr, center, size, start, elapsed, run = True):
   stopwatch = datetime.timedelta()
-  delta = stopwatch + (datetime.datetime.now() - start)
-  msg = 'Stopwatch: {0}.{1}'.format(delta.seconds, delta.microseconds // 100000)
   if start == -1:
-    stdscr.addstr(center[0] - size[0]//2 - 2, center[1] + size[1]//2 + 4, "0" + "     ")
+    stdscr.addstr(center[0] - size[0]//2 - 2, center[1] + size[1]//2 + 3, "0" + "     ")
   elif run == True and start != -1:
     stopwatch = datetime.datetime.now() - start
-    stdscr.addstr(center[0] - size[0]//2 - 2, center[1] + size[1]//2 + 4, msg + "     ")
+    msg = '{0}.{1}'.format(stopwatch.seconds, stopwatch.microseconds // 10000)
+    stdscr.addstr(center[0] - size[0]//2 - 2, center[1] + size[1]//2 + 3, msg + "     ")
 
 
 
@@ -247,11 +246,14 @@ def youWin(stdscr, center, size, start, elapsed):
   stdscr.addstr(center[0] + size[0]//2 + 2, center[1] - 16, "Press enter/return to play again")
 def coverCheck(stdscr, board, r, c):
   check = 0
+  dead = 0
   for r in range(0, len(board)):
       for c in range(0, len(board[0])):
         if board[r][c][3] != "covered":
           check += 1
-  return check 
+        if board[r][c][3] == "blasted":
+          dead += 1
+  return check, dead
           
       
     
@@ -324,15 +326,19 @@ def gamegame(stdscr, size, center, r, c):
         start = datetime.datetime.now()
         hold += 1
       if board[r][c][2] == 0:
-        live = openaround(stdscr, col, board, r, c, center, size, flags, bombs, start, elapsed)
-        if live == False:
-            gameOver(stdscr, board, col, center, size, flags, bombs, start, elapsed)
-            break
+        openaround(stdscr, col, board, r, c)
+        #live = openaround(stdscr, col, board, r, c)
+        #if live == False:
+            #gameOver(stdscr, board, col, center, size, flags, bombs, start, elapsed)
+            #break
     elif userKey == 32:
+      openaround(stdscr, col, board, r, c)
+      """
       live = openaround(stdscr, col, board, r, c, center, size, flags, bombs, start, elapsed)
       if live == False:
             gameOver(stdscr, board, col, center, size, flags, bombs, start, elapsed)
             break
+      """
     
     debugmsg(stdscr, board, board[nr][nc])
     paintcell(stdscr, board[r][c], col)
@@ -340,36 +346,22 @@ def gamegame(stdscr, size, center, r, c):
     r, c = nr, nc
 
     #NOTE: This only stops the stopwatch if you blast the cell you are on, meaning if you die because of openaround the stopwatch will continue. Change later obviously
-    if board[r][c][3] == "blasted":
-      gameOver(stdscr, board, col, center, size, flags, bombs, start, elapsed)
-      break
-    elif board[r][c][3] != "blasted":
-      flagCount(stdscr, flags, bombs, center, size)
-      stopwatch(stdscr, center, size, start, elapsed, True)
+    #if board[r][c][3] == "blasted":
+     # gameOver(stdscr, board, col, center, size, flags, bombs, start, elapsed)
+      #break
+    #if board[r][c][3] != "blasted":
+    flagCount(stdscr, flags, bombs, center, size)
+    stopwatch(stdscr, center, size, start, elapsed, True)
 
 
     #NEW IDEA: Make a function that checks the stuff in a loop so bad stuff won't happen. OR make the function the youWin thing just, uh, no, nvm.
-    check = coverCheck(stdscr, board, r, c)
+    check, dead = coverCheck(stdscr, board, r, c)
     if check == size[0] * size[1]:
       youWin(stdscr, center, size, start, elapsed)
       break
-    """
-    I DEFINITELY BROKE SOMETHING HERE, FIX IT
-    d = 0
-    for r in range(0, len(board)):
-      for c in range(0, len(board[0])):
-        if board[r][c][3] == "covered":
-          break
-        if d == size[0] * size[1] and flags == bombs:
-          youWin(stdscr, center, size, start)
-          d = -1
-        else:
-          continue
-    if d == -1:
+    if dead > 0:
+      gameOver(stdscr, board, col, center, size, flags, bombs, start, elapsed)
       break
-    """
-
-    stdscr.addstr(20, 0, str(start))
   
       
     
