@@ -165,7 +165,6 @@ def digcell(cell):
       cell[3] = "dig"
 
 def openaround(stdscr, col, board, r, c):
-  #status = True
   flagNum = 0
   if board[r][c][3] == "dig":
     for row in [r-1, r, r+1]:
@@ -185,9 +184,6 @@ def openaround(stdscr, col, board, r, c):
                   board[row][column][3] = "blasted"
                 else:  
                     board[row][column][3] = "dig"
-                #if board[row][column][3] == "blasted":
-                 # gameOver(stdscr, board, col, center, size, flags, bombs, start, elapsed)
-                  #status = False
                 paintcell(stdscr, board[row][column], col)
                 openaround(stdscr, col, board, row, column)
   #return status
@@ -206,28 +202,6 @@ def stopwatch(stdscr, center, size, start, elapsed, run = True):
 
 
 
-  """
-  now = 0
-  if start == -1:
-    stdscr.addstr(center[0] - size[0]//2 - 2, center[1] + size[1]//2 + 4, "0" + "   ")
-  elif run == True and start != -1:
-    now = datetime.datetime.now().day*86400 + datetime.datetime.now().hour*3600 + datetime.datetime.now().minute*60 + datetime.datetime.now().second
-    elapsed = now - start
-    stdscr.addstr(center[0] - size[0]//2 - 2, center[1] + size[1]//2 + 4, str(elapsed) + "   ")
-  
-
-  stdscr.addstr(21, 0, "      ")
-  stdscr.addstr(21, 0, str(now))    
-  stdscr.addstr(22, 0, ".-.")
-  """
-
-  #Okay I think the problem right now is that the seconds only go up to 59 before resetting at 0 or 1 since datetime is hours, minutes, AND seconds so once it reaches 60 it resets and the minutes increases and etc.
-  #okay so it goes from 59 to 0
-
-  #The below algorithms will be what elapsed is equal to
-  #When it reaches 0 the algorithm I think shoul be start + (60-start) + datetime.datetime.now().second + VARIABLE*60
-  #Okay so the variable should be 0 the first time it reaches 0 and then increase by one every time after that, I htink that will work.
-
 
 
 def gameOver(stdscr, board, col, center, size, flags, bombs, start, elapsed): 
@@ -235,9 +209,6 @@ def gameOver(stdscr, board, col, center, size, flags, bombs, start, elapsed):
   stopwatch(stdscr, center, size, start, elapsed, False)
   stdscr.addstr(center[0] + size[0]//2 + 1, center[1] - 4, "game over")
   stdscr.addstr(center[0] + size[0]//2 + 2, center[1] - 16, "Press enter/return to play again")
-  #Turn of the nodelay and reset the Timeou
-  #stdscr.nodelay(False)
-  #stdscr.timeout
 def youWin(stdscr, center, size, start, elapsed):
   #Okay just as a note I'll make it so they win when they flag all AND they reveal all the board.
   #Both conditions are in the big gamegame loop
@@ -258,6 +229,10 @@ def coverCheck(stdscr, board, r, c):
       
     
 
+def instructions(stdscr):
+  stdscr.addstr(20, 20, "Test")
+
+
 
 
 
@@ -274,7 +249,17 @@ def printfield(center_yx, size):
 
 
 def gamegame(stdscr, size, center, r, c):
-#call the field
+  while True:
+    userKey = stdscr.getch()
+    while userKey != ord("r"):
+      instructions(stdscr)
+    if userKey == ord("u"):
+      while userKey != ord("n"):
+        instructions(stdscr)
+      break
+      
+
+  #call the field
   board, bombs = initfield(center, size)
   stdscr.addstr(center[0] + size[0]//3 + 4, center[1] - size[1]//2, " " * size[1]*2)
   stdscr.addstr(center[0] + size[0]//3 + 5, center[1] - size[1], " " * size[1]*2)
@@ -297,7 +282,7 @@ def gamegame(stdscr, size, center, r, c):
 
   #cell[r][c] but reverse
   nr, nc = 0, 0
-  debugmsg(stdscr, board, board[nr][nc])
+  #debugmsg(stdscr, board, board[nr][nc])
   while True:
     userKey = stdscr.getch()
     if userKey in [27, 113]:
@@ -327,34 +312,18 @@ def gamegame(stdscr, size, center, r, c):
         hold += 1
       if board[r][c][2] == 0:
         openaround(stdscr, col, board, r, c)
-        #live = openaround(stdscr, col, board, r, c)
-        #if live == False:
-            #gameOver(stdscr, board, col, center, size, flags, bombs, start, elapsed)
-            #break
     elif userKey == 32:
       openaround(stdscr, col, board, r, c)
-      """
-      live = openaround(stdscr, col, board, r, c, center, size, flags, bombs, start, elapsed)
-      if live == False:
-            gameOver(stdscr, board, col, center, size, flags, bombs, start, elapsed)
-            break
-      """
     
-    debugmsg(stdscr, board, board[nr][nc])
+    #debugmsg(stdscr, board, board[nr][nc])
     paintcell(stdscr, board[r][c], col)
     paintcell(stdscr, board[nr][nc], col, True)
     r, c = nr, nc
 
-    #NOTE: This only stops the stopwatch if you blast the cell you are on, meaning if you die because of openaround the stopwatch will continue. Change later obviously
-    #if board[r][c][3] == "blasted":
-     # gameOver(stdscr, board, col, center, size, flags, bombs, start, elapsed)
-      #break
-    #if board[r][c][3] != "blasted":
     flagCount(stdscr, flags, bombs, center, size)
     stopwatch(stdscr, center, size, start, elapsed, True)
 
 
-    #NEW IDEA: Make a function that checks the stuff in a loop so bad stuff won't happen. OR make the function the youWin thing just, uh, no, nvm.
     check, dead = coverCheck(stdscr, board, r, c)
     if check == size[0] * size[1]:
       youWin(stdscr, center, size, start, elapsed)
@@ -391,6 +360,7 @@ def field(stdscr):
   #Literal game
   gamegame(stdscr, size, center, r, c)
 
+  #OKAY SO HERE IS WHERE I SHOULD PROBABLY MAKE THE LEADERBOARD THING
   while True:
     #hold the screen between games
     userkey = stdscr.getch()
