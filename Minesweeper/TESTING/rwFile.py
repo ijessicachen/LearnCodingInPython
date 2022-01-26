@@ -36,3 +36,13 @@ def extract_score(item):
   return float(player[1])
 leaders.sort(key=extract_score)
 print(leaders)
+
+f = open("filename.txt", 'a')
+f.write(str(leaders))
+f.close
+
+f = open("filename.py", "r")
+content = f.read()
+f.close
+
+

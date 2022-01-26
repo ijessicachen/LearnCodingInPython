@@ -107,8 +107,9 @@ def paintfield(stdscr, board, col, center, size, flags, bombs, show = False):
 
 
 def paintcell(stdscr, cell, col, reverse=False, show=False):
-
+  #whether the cell has been selected
   if show:
+    #if there's a bomb (maybe?)
     if cell[2] == -1:
       if cell[3] == "blasted":
         cell_ch = chr(10040)
@@ -117,9 +118,12 @@ def paintcell(stdscr, cell, col, reverse=False, show=False):
       else:
         cell_ch = chr(10040)
         cell_colour = col["-1"]
+    # I think this is literally when nothing happens, idk why 
+    # the colour is -1 though
     elif cell[2] == 0:
       cell_ch = " "
       cell_colour = col["-1"]
+    # flagging???
     else:
       if cell[3] == "flag":
         cell_ch = chr(9873)
@@ -127,13 +131,17 @@ def paintcell(stdscr, cell, col, reverse=False, show=False):
       else:
         cell_ch = str(cell[2])
         cell_colour = col[cell_ch]
+  # I honestly have no clue
   else:
+    # covered square
     if cell[3] == "covered":
       cell_ch = chr(9608)
       cell_colour = col["cover"]
+    # flagged square
     elif cell[3] == "flag":
       cell_ch = chr(9873)
       cell_colour = col["flag"]
+    # safely dug square
     elif cell[3] == "dig":
       #so zeroes will just be blank
       if cell[2] == 0:
@@ -142,6 +150,7 @@ def paintcell(stdscr, cell, col, reverse=False, show=False):
       else:
         cell_ch = str(cell[2])
         cell_colour = col[cell_ch]
+    # bombed square (probably shown when they lose???)
     elif cell[3] == "blasted":
       cell_ch = chr(10040)
       cell_colour = col["blasted"]
@@ -229,11 +238,18 @@ def coverCheck(stdscr, board, r, c):
       
     
 
-def instructions(stdscr):
-  stdscr.addstr(20, 20, "Test")
-
-
-
+def instructions(stdscr, center, size):
+  stdscr.addstr(center[0] - size[0] + 8, center[1] - size[1] - 23, "Instructions")
+  stdscr.addstr(center[0] - size[0] + 10, center[1] - size[1] - 23, "move with")
+  stdscr.addstr(center[0] - size[0] + 11, center[1] - size[1] - 23, "the arrow keys")
+  stdscr.addstr(center[0] - size[0] + 12, center[1] - size[1] - 23, "or 'h''k''j''l'")
+  stdscr.addstr(center[0] - size[0] + 14, center[1] - size[1] - 23, "'d' for dig")
+  stdscr.addstr(center[0] - size[0] + 15, center[1] - size[1] - 23, "'f' for flag")
+  stdscr.addstr(center[0] - size[0] + 16, center[1] - size[1] - 23, "' ' to reveal")
+  stdscr.addstr(center[0] - size[0] + 17, center[1] - size[1] - 23, "surroundings")
+  
+def leaderboard(stdscr, center, size):
+  stdscr.addstr(center[0] - size[0] + 8, center[1] + size[1] + 5, "Leaderboard")
 
 
 def debugmsg(stdscr, board, cell, show_surrounding = False):
@@ -249,15 +265,6 @@ def printfield(center_yx, size):
 
 
 def gamegame(stdscr, size, center, r, c):
-  while True:
-    userKey = stdscr.getch()
-    while userKey != ord("r"):
-      instructions(stdscr)
-    if userKey == ord("u"):
-      while userKey != ord("n"):
-        instructions(stdscr)
-      break
-      
 
   #call the field
   board, bombs = initfield(center, size)
@@ -269,11 +276,13 @@ def gamegame(stdscr, size, center, r, c):
   start = -1
   elapsed = -1
   hold = 0
-  live = True
+  live = True #find out what this was for
 
   col = colours()
   textpad.rectangle(stdscr, board[r][c][0] - 1, board[r][c][1] - 2, center[0] + size[0]//2, center[1] + size[1]+1)
   paintfield(stdscr, board, col, center, size, flags, bombs, False)
+  instructions(stdscr, center, size)
+  leaderboard(stdscr, center, size)
 
   #paint cell [r][c] reverse
   paintcell(stdscr, board[r][c], col, True)
@@ -284,6 +293,7 @@ def gamegame(stdscr, size, center, r, c):
   nr, nc = 0, 0
   #debugmsg(stdscr, board, board[nr][nc])
   while True:
+    #navigation, and controls
     userKey = stdscr.getch()
     if userKey in [27, 113]:
       break
@@ -354,7 +364,7 @@ def field(stdscr):
   
   
   
-  #set screen size variables
+  #set board size variables
   size = [16, 16]
 
   #Literal game
